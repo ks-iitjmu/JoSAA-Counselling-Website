@@ -1,0 +1,208 @@
+.institutes-page {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--space-6);
+  min-height: calc(100vh - 72px);
+}
+
+.page-header {
+  margin-bottom: var(--space-8);
+}
+
+.institutes-page h1 {
+  color: var(--gray-900);
+  margin-bottom: var(--space-4);
+  font-size: 2.5rem;
+  font-weight: 700;
+}
+
+.page-description {
+  color: var(--gray-600);
+  font-size: 1.1rem;
+  margin-bottom: var(--space-8);
+}
+
+.filters {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+  background: var(--white);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.875rem 1.25rem;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: var(--white);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(0, 82, 255, 0.1);
+}
+
+.filter-select {
+  padding: 0.875rem 1.25rem;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--white);
+  min-width: 180px;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 3px rgba(0, 82, 255, 0.1);
+}
+
+.institutes-count {
+  color: var(--gray-600);
+  margin-bottom: var(--space-6);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.institutes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: var(--space-6);
+}
+
+.institute-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
+  border: 1px solid var(--gray-200);
+  cursor: pointer;
+}
+
+.institute-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--primary-blue);
+}
+
+.institute-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.institute-header h3 {
+  color: var(--gray-900);
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.institute-type {
+  background: var(--primary-blue);
+  color: var(--white);
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-left: var(--space-3);
+}
+
+.institute-type.IIT {
+  background: linear-gradient(135deg, #0052FF 0%, #0041CC 100%);
+}
+
+.institute-type.NIT {
+  background: linear-gradient(135deg, #00C853 0%, #00A843 100%);
+}
+
+.institute-type.IIIT {
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+}
+
+.institute-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.institute-details p {
+  margin: 0;
+  color: var(--gray-600);
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.institute-details strong {
+  color: var(--gray-900);
+  font-weight: 600;
+}
+
+.institute-details a {
+  color: var(--primary-blue);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.institute-details a:hover {
+  color: var(--primary-blue-dark);
+  text-decoration: underline;
+}
+
+.loading {
+  text-align: center;
+  padding: var(--space-16);
+  color: var(--primary-blue);
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.no-results {
+  text-align: center;
+  padding: var(--space-16);
+  color: var(--gray-600);
+  font-size: 1.1rem;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+@media (max-width: 768px) {
+  .institutes-page {
+    padding: var(--space-4);
+  }
+  
+  .institutes-page h1 {
+    font-size: 2rem;
+  }
+  
+  .filters {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  
+  .filter-select {
+    width: 100%;
+  }
+  
+  .institutes-grid {
+    grid-template-columns: 1fr;
+  }
+}
