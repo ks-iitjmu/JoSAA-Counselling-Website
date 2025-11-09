@@ -9,6 +9,64 @@ const api = axios.create({
   },
 });
 
+// Add request interceptor to include auth token if available
+api.interceptors.request.use(
+  (config) => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      // If you implement JWT tokens, add them here
+      // const userData = JSON.parse(user);
+      // config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Authentication APIs
+export const authAPI = {
+  login: (identifier: string, password: string) => 
+    api.post('/auth/login', { identifier, password }),
+  register: (role: string, userData: any) => 
+    api.post('/auth/register', { role, ...userData }),
+  logout: () => api.post('/auth/logout'),
+  getProfile: (userID: number) => api.get(`/auth/profile/${userID}`),
+  updateProfile: (userID: number, updates: any) => 
+    api.put(`/auth/profile/${userID}`, updates),
+  changePassword: (userID: number, currentPassword: string, newPassword: string) => 
+    api.put(`/auth/password/${userID}`, { currentPassword, newPassword }),
+  checkIdentifier: (type: string, value: string) => 
+    api.get(`/auth/check?type=${type}&value=${value}`),
+};
+
+// Helper functions for authentication
+export const login = async (identifier: string, password: string) => {
+  const response = await authAPI.login(identifier, password);
+  return response.data;
+};
+
+export const register = async (role: string, userData: any) => {
+  const response = await authAPI.register(role, { ...userData, password: userData.password });
+  return response.data;
+};
+
+export const logout = () => {
+  localStorage.removeItem('user');
+  localStorage.removeItem('isAuthenticated');
+  return authAPI.logout();
+};
+
+export const getCurrentUser = () => {
+  const userStr = localStorage.getItem('user');
+  return userStr ? JSON.parse(userStr) : null;
+};
+
+export const isAuthenticated = () => {
+  return localStorage.getItem('isAuthenticated') === 'true';
+};
+
 // Candidate APIs
 export const candidateAPI = {
   getAll: () => api.get('/candidates'),

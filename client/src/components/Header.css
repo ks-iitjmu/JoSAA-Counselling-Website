@@ -223,6 +223,139 @@
   justify-content: center;
 }
 
+/* Authentication Styles */
+.auth-links {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.login-link {
+  color: var(--primary-blue) !important;
+  border: 2px solid var(--primary-blue);
+}
+
+.login-link:hover {
+  background: var(--primary-blue) !important;
+  color: var(--white) !important;
+}
+
+.register-link {
+  background: var(--primary-blue);
+  color: var(--white) !important;
+  border: 2px solid var(--primary-blue);
+}
+
+.register-link:hover {
+  background: var(--primary-blue-dark);
+  border-color: var(--primary-blue-dark);
+}
+
+.user-menu {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--gray-200);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-end;
+}
+
+.user-name {
+  font-weight: 600;
+  color: var(--gray-800);
+  font-size: 0.9rem;
+}
+
+.user-role-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.logout-btn {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 2px solid var(--gray-300);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #fee;
+  border-color: #fcc;
+  color: #c33;
+}
+
+/* Side Panel User Section */
+.side-panel-user {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-4) var(--space-6);
+  background: var(--gray-50);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-blue) 0%, var(--primary-blue-dark) 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.side-panel-user .user-name {
+  font-size: 1rem;
+  color: var(--gray-800);
+}
+
+.side-panel-divider {
+  height: 1px;
+  background: var(--gray-200);
+  margin: var(--space-2) var(--space-6);
+}
+
+.logout-mobile {
+  color: #c33 !important;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  text-align: left;
+  width: 100%;
+}
+
+.logout-mobile:hover {
+  background: #fee !important;
+  border-left-color: #c33 !important;
+}
+
 /* Desktop styles */
 @media (min-width: 1025px) {
   .hamburger,

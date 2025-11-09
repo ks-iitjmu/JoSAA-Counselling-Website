@@ -7,6 +7,8 @@ import Candidates from './pages/Candidates';
 import Allocations from './pages/Allocations';
 import SeatMatrix from './pages/SeatMatrix';
 import Ranks from './pages/Ranks';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import './App.css';
 
 function App() {
@@ -17,12 +19,19 @@ function App() {
         <main className="main-content">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/institutes" element={<Institutes />} />
             <Route path="/choice-filling" element={<ChoiceFilling />} />
             <Route path="/candidates" element={<Candidates />} />
             <Route path="/allocations" element={<Allocations />} />
             <Route path="/seat-matrix" element={<SeatMatrix />} />
             <Route path="/ranks" element={<Ranks />} />
+            
+            {/* Role-based dashboard routes - can be protected later */}
+            <Route path="/student-dashboard" element={<Home />} />
+            <Route path="/institute-dashboard" element={<Home />} />
+            <Route path="/admin-dashboard" element={<Home />} />
           </Routes>
         </main>
         <footer className="footer">

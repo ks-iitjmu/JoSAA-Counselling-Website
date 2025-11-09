@@ -15,8 +15,10 @@ const candidateRoutes = require('./routes/candidates');
 const instituteRoutes = require('./routes/institutes');
 const choiceRoutes = require('./routes/choices');
 const commonRoutes = require('./routes/common');
+const authRoutes = require('./routes/auth');
 
 // API Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/institutes', instituteRoutes);
 app.use('/api/choices', choiceRoutes);
@@ -37,6 +39,7 @@ app.get('/', (req, res) => {
     message: 'Welcome to JOSAA API Server',
     version: '1.0.0',
     endpoints: {
+      auth: '/api/auth',
       candidates: '/api/candidates',
       institutes: '/api/institutes',
       choices: '/api/choices',
