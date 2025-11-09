@@ -47,13 +47,20 @@
   font-weight: 600;
   border-radius: var(--radius-lg);
   text-decoration: none;
-  transition: all 0.2s ease;
-  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  border: 2px solid var(--white);
+  opacity: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-xl);
+  background: var(--primary-blue);
+  color: var(--white);
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--white);
+  opacity: 1;
 }
 
 .btn-secondary {
@@ -72,6 +79,7 @@
   background: var(--white);
   color: var(--primary-blue);
   transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 .features-section {
@@ -151,8 +159,9 @@
 
 .btn:hover {
   background: var(--primary-blue-dark);
+  color: var(--white);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-lg);
 }
 
 .stats-section {

@@ -80,10 +80,12 @@
   padding: var(--space-6);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
+  flex-wrap: wrap;
 }
 
 .search-input {
   flex: 1;
+  min-width: 250px;
   padding: 0.875rem 1.25rem;
   border: 2px solid var(--gray-200);
   border-radius: var(--radius-md);
@@ -104,7 +106,7 @@
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 150px;
+  min-width: 140px;
 }
 
 .seats-count {
@@ -116,7 +118,7 @@
 
 .seats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
   gap: var(--space-6);
 }
 
