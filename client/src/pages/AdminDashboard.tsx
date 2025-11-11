@@ -143,9 +143,11 @@ const AdminDashboard = () => {
                 </div>
               </div>
               <h3>Candidate Management</h3>
-              <p>Manage candidate records, search profiles, and view application details</p>
+              <p>Complete candidate lifecycle management - add new candidates, update profiles, and remove records</p>
               <div className="card-actions">
-                <span className="action-badge">View</span>
+                <span className="action-badge">Add</span>
+                <span className="action-badge">Edit</span>
+                <span className="action-badge">Delete</span>
                 <span className="action-badge">Search</span>
               </div>
             </Link>

@@ -20,6 +20,7 @@ router.put('/password/:userID', isAuthenticated, authController.changePassword);
 // Admin-only routes
 router.get('/users', isAuthenticated, authController.getAllUsers);
 router.delete('/users/:userId', isAuthenticated, authController.deleteUser);
+router.get('/debug', isAuthenticated, authController.debugDatabaseState);
 
 // Check if identifier exists (for validation during registration)
 router.get('/check', authController.checkIdentifier);

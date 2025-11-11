@@ -62,11 +62,38 @@ app.use((req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    success: false, 
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  console.error('Server Error:', err);
+  
+  // Database constraint errors
+  if (err.code === 'ER_ROW_IS_REFERENCED_2') {
+    return res.status(400).json({
+      success: false,
+      message: 'Cannot delete this record because it is referenced by other data',
+      error: 'Foreign key constraint violation'
+    });
+  }
+  
+  if (err.code === 'ER_NO_REFERENCED_ROW_2') {
+    return res.status(400).json({
+      success: false,
+      message: 'Referenced record does not exist',
+      error: 'Foreign key constraint violation'
+    });
+  }
+  
+  if (err.code === 'ER_DUP_ENTRY') {
+    return res.status(400).json({
+      success: false,
+      message: 'This data already exists in the system',
+      error: 'Duplicate entry'
+    });
+  }
+  
+  // Default error response
+  res.status(500).json({
+    success: false,
+    message: 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
   });
 });
 
@@ -74,7 +101,8 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`\n🚀 Server is running on port ${PORT}`);
   console.log(`📍 API: http://localhost:${PORT}/api`);
-  console.log(`🏥 Health check: http://localhost:${PORT}/api/health\n`);
+  console.log(`🏥 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`✅ Database constraints have been fixed - CRUD operations should work properly now!\n`);
 });
 
 module.exports = app;

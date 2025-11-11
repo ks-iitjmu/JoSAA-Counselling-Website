@@ -384,6 +384,8 @@ exports.deleteUser = async (req, res) => {
       });
     }
     
+    console.log(`Attempting to delete user with ID: ${userId}`);
+    
     const result = await User.delete(userId);
     
     if (result.affectedRows === 0) {
@@ -392,6 +394,8 @@ exports.deleteUser = async (req, res) => {
         message: 'User not found'
       });
     }
+    
+    console.log(`Successfully deleted user with ID: ${userId}`);
     
     res.json({
       success: true,
@@ -402,6 +406,34 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to delete user',
+      error: error.message
+    });
+  }
+};
+
+// Debug endpoint to check database state (Admin only)
+exports.debugDatabaseState = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'Administrator') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only administrators can access debug information'
+      });
+    }
+    
+    const { candidateId, email } = req.query;
+    
+    const debugInfo = await User.getDebugInfo(candidateId, email);
+    
+    res.json({
+      success: true,
+      data: debugInfo
+    });
+  } catch (error) {
+    console.error('Debug database state error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get debug information',
       error: error.message
     });
   }

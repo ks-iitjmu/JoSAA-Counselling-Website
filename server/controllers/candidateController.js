@@ -106,7 +106,30 @@ exports.createCandidate = async (req, res) => {
       });
     }
     
-    const result = await Candidate.create(req.body);
+    // Prepare candidate data with all required fields, setting defaults for missing ones
+    const candidateData = {
+      CandidateID: req.body.CandidateID,
+      Name: req.body.Name,
+      DateOfBirth: req.body.DateOfBirth,
+      Gender: req.body.Gender,
+      MobileNumber: req.body.MobileNumber,
+      EmailAddress: req.body.EmailAddress,
+      JEE_Mains_Application_Number: null,
+      JEE_Advanced_Application_Number: null,
+      StateOfEligibility: null,
+      JEE_Mains_AIR: req.body.JEE_Mains_AIR || null,
+      JEE_Mains_Category_Rank: null,
+      JEE_Advanced_Qualifying_status: req.body.JEE_Advanced_Qualifying_status || 'Not Qualified',
+      Category: req.body.Category || 'General',
+      PwD_status: 'No',
+      PwD_Category: null,
+      DS_Status: 'No',
+      Twelfth_Aggregate_Percentage: null,
+      Twelfth_Top_20_Percentile_Status: 'No',
+      Document_Upload_Status: 'Pending'
+    };
+    
+    const result = await Candidate.create(candidateData);
     res.status(201).json({ 
       success: true, 
       message: 'Candidate created successfully',

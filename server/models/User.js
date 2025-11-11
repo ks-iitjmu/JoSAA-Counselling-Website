@@ -32,6 +32,26 @@ class User {
     try {
       await connection.beginTransaction();
       
+      // Check if candidate ID already exists
+      const [existingCandidate] = await connection.query(
+        'SELECT CandidateID FROM Candidate WHERE CandidateID = ?',
+        [candidateData.candidateID]
+      );
+      
+      if (existingCandidate.length > 0) {
+        throw new Error(`Candidate ID ${candidateData.candidateID} already exists in the system`);
+      }
+      
+      // Check if email is already in use
+      const [existingUser] = await connection.query(
+        'SELECT UserID FROM Users WHERE Email = ? OR Username = ?',
+        [candidateData.email, candidateData.email]
+      );
+      
+      if (existingUser.length > 0) {
+        throw new Error(`Email ${candidateData.email} is already registered`);
+      }
+      
       // Insert candidate data
       const candidateQuery = `
         INSERT INTO Candidate (
@@ -74,6 +94,21 @@ class User {
       
     } catch (error) {
       await connection.rollback();
+      
+      // Log the actual error for debugging
+      console.error('Registration error:', error.message);
+      
+      // Throw a more user-friendly error
+      if (error.code === 'ER_DUP_ENTRY') {
+        if (error.message.includes('CandidateID')) {
+          throw new Error('This Candidate ID is already registered');
+        } else if (error.message.includes('Email') || error.message.includes('Username')) {
+          throw new Error('This email address is already registered');
+        } else {
+          throw new Error('This information is already registered in the system');
+        }
+      }
+      
       throw error;
     } finally {
       connection.release();
@@ -275,9 +310,73 @@ class User {
 
   // Delete user (Admin only)
   static async delete(userId) {
-    const query = 'DELETE FROM Users WHERE UserID = ?';
-    const [result] = await db.query(query, [userId]);
-    return result;
+    // First get user information to determine what needs to be deleted
+    const getUserQuery = 'SELECT Role, CandidateID, InstituteCode FROM Users WHERE UserID = ?';
+    const [users] = await db.query(getUserQuery, [userId]);
+    
+    if (users.length === 0) {
+      return { affectedRows: 0 };
+    }
+    
+    const user = users[0];
+    
+    // Start a transaction to ensure data consistency
+    const connection = await db.getConnection();
+    
+    try {
+      await connection.beginTransaction();
+      
+      // If user is a student, delete the candidate record first
+      // This will cascade to all related tables (Choice_List, Allocation)
+      if (user.Role === 'Student' && user.CandidateID) {
+        await connection.query('DELETE FROM Candidate WHERE CandidateID = ?', [user.CandidateID]);
+      }
+      
+      // Delete the user record
+      const [result] = await connection.query('DELETE FROM Users WHERE UserID = ?', [userId]);
+      
+      // Commit the transaction
+      await connection.commit();
+      
+      return result;
+    } catch (error) {
+      // Rollback the transaction on error
+      await connection.rollback();
+      console.error('Error deleting user:', error);
+      throw error;
+    } finally {
+      connection.release();
+    }
+  }
+
+  // Debug method to check database state
+  static async getDebugInfo(candidateId, email) {
+    const debugInfo = {
+      candidateId: candidateId,
+      email: email,
+      candidateExists: false,
+      userExists: false,
+      candidateData: null,
+      userData: null
+    };
+
+    if (candidateId) {
+      // Check if candidate exists
+      const candidateQuery = 'SELECT * FROM Candidate WHERE CandidateID = ?';
+      const [candidates] = await db.query(candidateQuery, [candidateId]);
+      debugInfo.candidateExists = candidates.length > 0;
+      debugInfo.candidateData = candidates[0] || null;
+    }
+
+    if (email) {
+      // Check if user exists
+      const userQuery = 'SELECT UserID, Username, Email, Role, CandidateID, InstituteCode, IsActive FROM Users WHERE Email = ?';
+      const [users] = await db.query(userQuery, [email]);
+      debugInfo.userExists = users.length > 0;
+      debugInfo.userData = users[0] || null;
+    }
+
+    return debugInfo;
   }
 }
 
