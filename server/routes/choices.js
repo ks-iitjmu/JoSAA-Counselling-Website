@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const choiceController = require('../controllers/choiceController');
+const { isAuthenticated } = require('../middleware/auth');
+
+// All choice routes require authentication
+router.use(isAuthenticated);
 
 // Choice List routes
 router.get('/candidate/:candidateId', choiceController.getChoicesByCandidate);

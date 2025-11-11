@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const candidateController = require('../controllers/candidateController');
+const { isAuthenticated, hasRole } = require('../middleware/auth');
+
+// All candidate routes require authentication
+router.use(isAuthenticated);
 
 // Candidate routes
 router.get('/', candidateController.getAllCandidates);

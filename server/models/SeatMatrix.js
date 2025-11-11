@@ -52,7 +52,7 @@ class SeatMatrix {
     return rows;
   }
 
-  // Create seat matrix entry
+  // Create new seat matrix entry
   static async create(seatMatrixData) {
     const { InstituteCode, ProgramCode, SeatPool, Quota, Category, TotalSeats } = seatMatrixData;
     const [result] = await pool.execute(
@@ -63,23 +63,30 @@ class SeatMatrix {
     return result;
   }
 
-  // Update seat matrix
-  static async update(seatMatrixId, seatMatrixData) {
-    const fields = Object.keys(seatMatrixData).map(key => `${key} = ?`).join(', ');
-    const values = [...Object.values(seatMatrixData), seatMatrixId];
-    
+  // Update seat matrix entry (for institute-program-specific updates)
+  static async update(instituteCode, programCode, updates) {
+    const { SeatPool, Quota, Category, TotalSeats, oldSeatPool, oldQuota, oldCategory } = updates;
     const [result] = await pool.execute(
-      `UPDATE Seat_Matrix SET ${fields} WHERE SeatMatrixID = ?`,
-      values
+      `UPDATE Seat_Matrix 
+       SET SeatPool = COALESCE(?, SeatPool),
+           Quota = COALESCE(?, Quota),
+           Category = COALESCE(?, Category),
+           TotalSeats = COALESCE(?, TotalSeats)
+       WHERE InstituteCode = ? AND ProgramCode = ?
+         AND SeatPool = ?
+         AND Quota = ?
+         AND Category = ?`,
+      [SeatPool, Quota, Category, TotalSeats, instituteCode, programCode, 
+       oldSeatPool, oldQuota, oldCategory]
     );
     return result;
   }
 
   // Delete seat matrix
-  static async delete(seatMatrixId) {
+  static async delete(instituteCode, programCode, seatPool, quota, category) {
     const [result] = await pool.execute(
-      'DELETE FROM Seat_Matrix WHERE SeatMatrixID = ?',
-      [seatMatrixId]
+      'DELETE FROM Seat_Matrix WHERE InstituteCode = ? AND ProgramCode = ? AND SeatPool = ? AND Quota = ? AND Category = ?',
+      [instituteCode, programCode, seatPool, quota, category]
     );
     return result;
   }

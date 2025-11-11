@@ -215,7 +215,7 @@ class User {
   
   // Update user profile
   static async updateProfile(userID, updates) {
-    const allowedUpdates = ['Email'];
+    const allowedUpdates = ['Email', 'Username'];
     const updateFields = [];
     const values = [];
     
@@ -254,6 +254,30 @@ class User {
     `;
     
     await db.query(query, [username, ipAddress, success ? 1 : 0, failureReason]);
+  }
+
+  // Get all users (Admin only)
+  static async getAll() {
+    const query = `
+      SELECT 
+        u.UserID, u.Username, u.Role, u.Email, u.CandidateID, u.InstituteCode,
+        c.Name as CandidateName,
+        i.InstituteName
+      FROM Users u
+      LEFT JOIN Candidate c ON u.CandidateID = c.CandidateID
+      LEFT JOIN Institute i ON u.InstituteCode = i.InstituteCode
+      ORDER BY u.UserID
+    `;
+    
+    const [rows] = await db.query(query);
+    return rows;
+  }
+
+  // Delete user (Admin only)
+  static async delete(userId) {
+    const query = 'DELETE FROM Users WHERE UserID = ?';
+    const [result] = await db.query(query, [userId]);
+    return result;
   }
 }
 

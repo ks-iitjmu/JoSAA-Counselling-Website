@@ -1,23 +1,54 @@
 # JoSAA Counselling System
 
-A modern web-based seat allocation system for JEE counselling with complete authentication and role-based access control. Built with React, TypeScript, Node.js, Express, and MySQL.
+A modern, secure web-based seat allocation system for JEE counselling with complete authentication and role-based access control. Built with React, TypeScript, Node.js, Express, and MySQL.
 
-## 🚀 Quick Start
+## � Table of Contents
+- [Features](#-features)
+- [Quick Start](#-quick-start)
+- [Authentication System](#-authentication-system)
+- [Project Structure](#-project-structure)
+- [API Documentation](#-api-documentation)
+- [User Roles & Permissions](#-user-roles--permissions)
+- [Contributing](#-contributing)
+- [Testing](#-testing)
+
+## ✨ Features
+
+### Core Features
+- ✅ **Role-Based Access Control** - Student, Institute, and Administrator roles
+- ✅ **Secure Authentication** - Login/logout with session management
+- ✅ **Student Portal** - View profile, allocations, and manage choice filling
+- ✅ **Institute Portal** - Manage institute information
+- ✅ **Admin Dashboard** - Complete system control
+- ✅ **Public Data Access** - Seat matrix and opening/closing ranks accessible to all
+- ✅ **Responsive Design** - Works seamlessly on desktop and mobile devices
+
+### Technical Features
+- ✅ RESTful API architecture
+- ✅ JWT-ready authentication system
+- ✅ SQL injection protection
+- ✅ Role-based route protection
+- ✅ Automatic session handling
+- ✅ Data isolation per user role
+
+## �🚀 Quick Start
 
 ### Prerequisites
-- Node.js v16+
-- MySQL v8.0+
-- npm
+- Node.js v16 or higher
+- MySQL v8.0 or higher
+- npm or yarn package manager
 
 ### 1. Database Setup
 ```bash
-# Create database
+# Login to MySQL
 mysql -u root -p
+
+# Create database
 CREATE DATABASE jossaDATABASE;
 USE jossaDATABASE;
 exit
 
-# Import schema, authentication tables, and sample data
+# Import all schemas and sample data
 mysql -u root -p jossaDATABASE < DBMS_TermProject.sql
 mysql -u root -p jossaDATABASE < authentication.sql
 mysql -u root -p jossaDATABASE < insert_sample_data.sql
@@ -28,130 +59,542 @@ mysql -u root -p jossaDATABASE < insert_sample_data.sql
 cd server
 npm install
 
-# Create .env file in server directory with:
-# PORT=5000
-# DB_HOST=localhost
-# DB_USER=root
-# DB_PASSWORD=your_password
-# DB_NAME=jossaDATABASE
-# NODE_ENV=development
+# Create .env file
+cat > .env << EOF
+PORT=5000
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+DB_NAME=jossaDATABASE
+NODE_ENV=development
+EOF
 
+# Start the server
 npm start
 ```
+
+The server will run on `http://localhost:5000`
 
 ### 3. Frontend Setup
 ```bash
 cd client
 npm install
 
-# Optional: Create .env file in client directory with:
-# VITE_API_BASE_URL=http://localhost:5000/api
+# Optional: Create .env file for custom API URL
+# echo "VITE_API_BASE_URL=http://localhost:5000/api" > .env
 
+# Start the development server
 npm run dev
 ```
 
-Visit: **http://localhost:5173**
+The client will run on `http://localhost:5173`
+
+### 4. Access the Application
+Open your browser and navigate to `http://localhost:5173`
+
+## 🔐 Authentication System
+
+### Overview
+The application implements a comprehensive role-based authentication system that controls access to data based on user roles and login status.
+
+### Authentication Flow
+```
+User Login → Validate Credentials → Store User Data → Include Auth Headers in Requests
+           ↓                                                    ↓
+    Generate Session                                    Check Role & Permissions
+           ↓                                                    ↓
+    Return User Data                                    Allow/Deny Access
+```
+
+### Authentication Headers
+All authenticated requests automatically include:
+```javascript
+{
+  'x-user-id': userID,
+  'x-user-role': 'Student' | 'Institute' | 'Administrator',
+  'x-candidate-id': candidateID,      // for students
+  'x-institute-code': instituteCode   // for institutes
+}
+```
+
+### Session Management
+- User data stored in browser's localStorage
+- Automatic redirect to login on 401 (Unauthorized)
+- Session cleared on logout
+- Persistent across browser refreshes
 
 ## 📁 Project Structure
 
 ```
 project/
-├── client/              # React + TypeScript frontend
+├── client/                      # React Frontend
 │   ├── src/
-│   │   ├── components/  # Header, UI components
-│   │   ├── pages/       # All page components
-│   │   ├── services/    # API integration (Axios)
-│   │   └── App.tsx      # Main app with routing
+│   │   ├── components/         # Reusable components
+│   │   │   └── Header.tsx      # Navigation with role-based menu
+│   │   ├── pages/              # Page components
+│   │   │   ├── Home.tsx
+│   │   │   ├── Login.tsx
+│   │   │   ├── Register.tsx
+│   │   │   ├── Candidates.tsx  # Student profile (protected)
+│   │   │   ├── Allocations.tsx # Seat allocations (protected)
+│   │   │   ├── ChoiceFilling.tsx # Choice management (student only)
+│   │   │   ├── Institutes.tsx  # Institute listing
+│   │   │   ├── SeatMatrix.tsx  # Public seat matrix
+│   │   │   └── Ranks.tsx       # Public opening/closing ranks
+│   │   ├── services/
+│   │   │   └── api.ts          # API client with auth interceptors
+│   │   └── utils/
+│   │       └── auth.ts         # Authentication utilities
 │   └── package.json
-├── server/              # Node.js + Express backend
-│   ├── config/          # Database connection
-│   ├── controllers/     # Business logic
-│   ├── models/          # Database queries
-│   ├── routes/          # API endpoints
-│   └── server.js        # Entry point
-├── DBMS_TermProject.sql       # Database schema
-└── insert_sample_data.sql     # Sample data
+│
+├── server/                      # Node.js Backend
+│   ├── config/
+│   │   └── database.js         # MySQL connection
+│   ├── controllers/            # Request handlers
+│   │   ├── authController.js   # Login/register/logout
+│   │   ├── candidateController.js
+│   │   ├── instituteController.js
+│   │   ├── choiceController.js
+│   │   └── commonController.js
+│   ├── middleware/
+│   │   └── auth.js             # Authentication & authorization
+│   ├── models/                 # Database models
+│   ├── routes/                 # API routes
+│   │   ├── auth.js
+│   │   ├── candidates.js       # Protected routes
+│   │   ├── institutes.js       # Mixed public/protected
+│   │   ├── choices.js          # Student-only routes
+│   │   └── common.js           # Mixed routes
+│   └── server.js               # Express app setup
+│
+├── DBMS_TermProject.sql        # Main database schema
+├── authentication.sql          # Authentication tables
+├── insert_sample_data.sql      # Sample data for testing
+└── README.md                   # This file
 ```
 
-## 🎯 Features
+## 🎭 User Roles & Permissions
 
-### Core Features
-- ✅ **Candidates** - View registered candidates with JEE ranks
-- ✅ **Institutes** - Browse IITs, NITs, IIITs with search/filter
-- ✅ **Choice Filling** - Manage program preferences
-- ✅ **Allocations** - View seat allocation results by round
-- ✅ **Seat Matrix** - Check available seats by category
-- ✅ **Opening/Closing Ranks** - View cutoff ranks
+### Public Access (No Login Required)
+```
+✅ View Seat Matrix (all seats by institute, program, category)
+✅ View Opening/Closing Ranks (cutoffs for all programs)
+✅ View Institutes (basic information, list all IITs/NITs/IIITs)
+✅ View Programs (available programs and degrees)
+✅ View Counselling Rounds (active and past rounds)
+❌ View Candidates (requires authentication)
+❌ View Allocations (requires authentication)
+❌ Fill Choices (requires student login)
+```
 
-### Authentication & Security
-- ✅ **User Registration** - Register as Student, Institute, or Admin
-- ✅ **Secure Login** - Multi-identifier login (Candidate ID, Email, Mobile, Institute Code)
-- ✅ **Role-Based Access** - Different permissions for Students, Institutes, and Administrators
-- ✅ **Password Hashing** - Bcrypt encryption for secure password storage
-- ✅ **Profile Management** - Update profile and change password
-- ✅ **Session Management** - Persistent authentication state
+### Student Access (After Login)
+```
+✅ View OWN profile and information
+✅ Update OWN profile (limited fields: mobile, email)
+✅ View OWN allocations across all rounds
+✅ Fill and manage OWN choice list
+   - Add choices (institute + program combinations)
+   - Reorder choices (drag and drop priority)
+   - Delete choices
+   - Lock/unlock choice list
+✅ View all public data (seat matrix, ranks, institutes)
+❌ View other students' information
+❌ Edit institutes or system data
+❌ Create allocations
+```
 
-## 🔐 Authentication System
+### Institute Access (After Login)
+```
+✅ View OWN institute detailed information
+✅ Update OWN institute info (address, phone, website, email)
+✅ View basic information of other institutes
+✅ View all public data
+❌ View student personal information
+❌ Edit other institutes
+❌ Access student-specific features
+```
 
-### User Roles
+### Administrator Access (After Login)
+```
+✅ Full CRUD access to all candidates
+✅ Full CRUD access to all institutes
+✅ View and manage all allocations
+✅ Create and manage programs
+✅ Manage seat matrix (add/update seats)
+✅ Manage opening/closing ranks
+✅ Create and manage counselling rounds
+✅ Complete system oversight
+```
 
-1. **Student**
-   - Register with Candidate ID, personal details, and JEE information
-   - Login using Candidate ID, Email, or Mobile Number
-   - Access student-specific features like choice filling and allocation results
-
-2. **Institute**
-   - Register with Institute Code and institutional details
-   - Login using Institute Code
-   - Manage institute-specific data and seat matrix
-
-3. **Administrator**
-   - Pre-created admin account for system management
-   - Full access to all system features and data
-   - Default credentials: `username: admin`, `password: admin123`
-
-⚠️ **Important:** Change the default admin password after first login!
-
-### Login Options
-
-- **Students:** Can log in using Candidate ID, Email Address, or Mobile Number
-- **Institutes:** Log in using Institute Code
-- **Administrators:** Log in using Username
+## 📡 API Documentation
 
 ### Authentication Endpoints
 
-| Route | Method | Description |
-|-------|--------|-------------|
-| `/api/auth/register` | POST | Register new user (Student/Institute) |
-| `/api/auth/login` | POST | Login with identifier and password |
-| `/api/auth/logout` | POST | Logout user |
-| `/api/auth/profile/:userID` | GET | Get user profile |
-| `/api/auth/profile/:userID` | PUT | Update user profile |
-| `/api/auth/password/:userID` | PUT | Change password |
-| `/api/auth/check` | GET | Check if identifier exists |
+#### Register User
+```http
+POST /api/auth/register
+Content-Type: application/json
 
-## 🔧 Tech Stack
+{
+  "role": "Student" | "Institute",
+  // For Student
+  "candidateID": 123456,
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "securepassword",
+  "dateOfBirth": "2005-01-15",
+  "gender": "Male",
+  "mobileNumber": "9876543210",
+  // ... other student fields
+  
+  // For Institute
+  "instituteCode": "INST001",
+  "instituteName": "Example IIT",
+  "email": "admin@iit.ac.in",
+  "password": "securepassword",
+  // ... other institute fields
+}
+```
 
-**Frontend:** React 19, TypeScript, React Router, Axios, Vite  
-**Backend:** Node.js, Express 5, MySQL 8, mysql2, bcrypt  
-**Security:** Password hashing, Role-based access control  
-**Design:** Material Design principles, responsive CSS
+#### Login
+```http
+POST /api/auth/login
+Content-Type: application/json
 
-## 📡 API Endpoints
+{
+  "identifier": "candidate@email.com" | "123456" | "INST001",
+  "password": "securepassword"
+}
 
-### Public Routes
-| Route | Method | Description |
-|-------|--------|-------------|
-| `/api/candidates` | GET | All candidates |
-| `/api/institutes` | GET | All institutes |
-| `/api/allocations` | GET | All allocations |
-| `/api/seat-matrix` | GET | Seat availability |
-| `/api/opening-closing-ranks` | GET | Cutoff ranks |
+Response:
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "userID": 1,
+      "username": "john_doe",
+      "role": "Student",
+      "email": "john@example.com",
+      "candidateID": 123456,
+      // ... other user data
+    }
+  }
+}
+```
 
-### Protected Routes (Require Authentication)
-| Route | Method | Description |
-|-------|--------|-------------|
-| `/api/choices/candidate/:id` | GET | Choices by candidate |
+### Public Endpoints (No Auth Required)
+
+#### Get Seat Matrix
+```http
+GET /api/seat-matrix
+GET /api/seat-matrix/institute/IIT001
+
+Response: List of available seats by category
+```
+
+#### Get Opening/Closing Ranks
+```http
+GET /api/opening-closing-ranks
+GET /api/opening-closing-ranks/round/1
+GET /api/opening-closing-ranks/search?rank=500&category=OPEN
+
+Response: Rank data for programs
+```
+
+#### Get Institutes
+```http
+GET /api/institutes
+GET /api/institutes/IIT001
+GET /api/institutes/with-programs
+
+Response: Institute information
+```
+
+### Protected Endpoints (Auth Required)
+
+All protected endpoints require authentication headers:
+```http
+x-user-id: <userID>
+x-user-role: Student | Institute | Administrator
+x-candidate-id: <candidateID>  (for students)
+x-institute-code: <instituteCode>  (for institutes)
+```
+
+#### Candidate Endpoints
+```http
+GET    /api/candidates           # Admin: all, Student: own only
+GET    /api/candidates/:id       # Admin/Student (own): view
+PUT    /api/candidates/:id       # Admin: full, Student: limited
+DELETE /api/candidates/:id       # Admin only
+```
+
+#### Allocation Endpoints
+```http
+GET /api/allocations/candidate/:candidateId  # Own allocations
+GET /api/allocations/round/:roundId          # Admin only
+POST /api/allocations                        # Admin only
+```
+
+#### Choice Endpoints (Student Only)
+```http
+GET    /api/choices/candidate/:candidateId  # View own choices
+POST   /api/choices                          # Add choice
+PUT    /api/choices/:choiceId/order          # Reorder
+POST   /api/choices/lock                     # Lock choices
+DELETE /api/choices/:choiceId                # Delete choice
+```
+
+## 🧪 Testing
+
+### Quick Test Checklist
+
+#### 1. Without Login (Public Access)
+- [ ] Open `http://localhost:5173`
+- [ ] Navigate to "Seat Matrix" → Should work ✅
+- [ ] Navigate to "Ranks" → Should work ✅
+- [ ] Navigate to "Institutes" → Should work ✅
+- [ ] Try "Candidates" → Should redirect to login 🔒
+- [ ] Try "Choice Filling" → Should not appear in menu ❌
+
+#### 2. As Student
+- [ ] Login with student credentials
+- [ ] "Choice Filling" appears in navigation menu ✅
+- [ ] Go to "Candidates" → See only your profile
+- [ ] Go to "Allocations" → See only your allocations
+- [ ] Go to "Choice Filling" → Manage your choices
+- [ ] Try accessing another student's data → Should be denied
+
+#### 3. As Institute
+- [ ] Login with institute credentials
+- [ ] "Choice Filling" does NOT appear in menu ❌
+- [ ] View your institute details
+- [ ] Try to edit your institute → Should work
+- [ ] Try to edit another institute → Should be denied
+
+#### 4. As Administrator
+- [ ] Login with admin credentials
+- [ ] "Choice Filling" does NOT appear in menu ❌
+- [ ] Access all pages
+- [ ] View all data
+- [ ] Perform CRUD operations
+
+### Automated Testing
+```bash
+# Test public and protected routes
+./test-auth.sh
+
+# The script will test:
+# - Public endpoints (should return 200)
+# - Protected endpoints without auth (should return 401)
+```
+
+### Manual API Testing with curl
+
+Test public access:
+```bash
+curl http://localhost:5000/api/seat-matrix
+curl http://localhost:5000/api/opening-closing-ranks
+```
+
+Test protected access (should fail):
+```bash
+curl http://localhost:5000/api/candidates
+# Expected: 401 Unauthorized
+```
+
+Test with authentication:
+```bash
+# First login to get user data
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"identifier":"student@email.com","password":"password123"}'
+
+# Then use returned userID and role in headers
+curl http://localhost:5000/api/candidates/123 \
+  -H "x-user-id: 1" \
+  -H "x-user-role: Student" \
+  -H "x-candidate-id: 123"
+```
+
+## 🤝 Contributing
+
+### Development Setup
+
+1. **Fork the repository**
+2. **Clone your fork**
+   ```bash
+   git clone https://github.com/yourusername/DBMS_Project.git
+   cd DBMS_Project
+   ```
+
+3. **Create a feature branch**
+   ```bash
+   git checkout -b feature/your-feature-name
+   ```
+
+4. **Make your changes**
+   - Follow existing code style
+   - Add comments for complex logic
+   - Test your changes thoroughly
+
+5. **Commit and push**
+   ```bash
+   git add .
+   git commit -m "Add: description of your changes"
+   git push origin feature/your-feature-name
+   ```
+
+6. **Create a Pull Request**
+
+### Code Style Guidelines
+
+#### Frontend (React/TypeScript)
+- Use functional components with hooks
+- Type all props and state
+- Use meaningful variable names
+- Add JSDoc comments for complex functions
+
+#### Backend (Node.js/Express)
+- Follow MVC pattern
+- Use async/await for database operations
+- Add error handling for all routes
+- Validate input data
+
+#### Database
+- Use parameterized queries (prevent SQL injection)
+- Follow naming conventions: PascalCase for tables, camelCase for fields
+- Add indexes for frequently queried columns
+
+### Adding New Features
+
+#### Adding a New Protected Route
+
+1. **Create controller function** (`server/controllers/yourController.js`):
+```javascript
+exports.yourFunction = async (req, res) => {
+  try {
+    // Check user role
+    if (req.user.role !== 'Student') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied'
+      });
+    }
+    
+    // Your logic here
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+```
+
+2. **Add route** (`server/routes/yourRoute.js`):
+```javascript
+const { isAuthenticated } = require('../middleware/auth');
+router.get('/your-route', isAuthenticated, yourController.yourFunction);
+```
+
+3. **Create frontend API call** (`client/src/services/api.ts`):
+```typescript
+export const yourAPI = {
+  getData: () => api.get('/your-route')
+};
+```
+
+#### Adding a New Page
+
+1. **Create page component** (`client/src/pages/YourPage.tsx`)
+2. **Add route** in `App.tsx`
+3. **Add navigation link** in `Header.tsx` (with role check if needed)
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+#### Database Connection Error
+```
+Error: ER_ACCESS_DENIED_ERROR
+```
+**Solution:** Check your `.env` file has correct MySQL credentials
+
+#### Port Already in Use
+```
+Error: listen EADDRINUSE: address already in use :::5000
+```
+**Solution:** Kill process using port or change PORT in `.env`
+```bash
+# Find and kill process
+lsof -ti:5000 | xargs kill -9
+# Or change port
+PORT=5001 npm start
+```
+
+#### Authentication Not Working
+**Solution:** 
+1. Clear browser localStorage
+2. Check if user data is being stored after login
+3. Verify auth headers are being sent in network tab
+4. Check server logs for authentication errors
+
+#### 401 Unauthorized on Protected Routes
+**Solution:**
+1. Ensure you're logged in
+2. Check localStorage has 'user' and 'isAuthenticated' keys
+3. Verify headers are included in request (check Network tab)
+
+#### Student Sees No Data on Candidates Page
+**Solution:**
+1. Verify candidateID in localStorage matches database
+2. Check server logs for query errors
+3. Ensure candidate record exists in database
+
+## 📚 Database Schema
+
+### Key Tables
+
+- **User** - Authentication (UserID, Username, PasswordHash, Role)
+- **Candidate** - Student information (CandidateID, Name, Email, JEE ranks)
+- **Institute** - College information (InstituteCode, Name, Type)
+- **Program** - Academic programs (ProgramCode, Name, Degree, Duration)
+- **ChoiceList** - Student preferences (ChoiceID, CandidateID, ProgramCode)
+- **Allocation** - Seat assignments (AllocationID, CandidateID, ProgramCode, Round)
+- **SeatMatrix** - Available seats (InstituteCode, ProgramCode, Category, Seats)
+- **OpeningClosingRanks** - Cutoff ranks (ProgramCode, Category, Round, Opening, Closing)
+
+### Relationships
+
+```
+User → Candidate (one-to-one via CandidateID)
+User → Institute (one-to-one via InstituteCode)
+Candidate → ChoiceList (one-to-many)
+Candidate → Allocation (one-to-many)
+Institute → Program (one-to-many)
+Program → SeatMatrix (one-to-many)
+Program → OpeningClosingRanks (one-to-many)
+```
+
+## 📄 License
+
+This project is created for educational purposes as part of a Database Management Systems course project.
+
+## 👥 Authors
+
+- Student Project Team
+- IIT Jammu
+
+## 📧 Support
+
+For issues, questions, or contributions, please:
+1. Check the troubleshooting section
+2. Review existing issues on GitHub
+3. Create a new issue with detailed description
+
+---
+
+**🎉 Happy Coding!** If you find this project helpful, please give it a star ⭐
+
 | `/api/choices` | POST | Add new choice |
 | `/api/auth/profile/:userID` | GET/PUT | Profile management |
 | `/api/auth/password/:userID` | PUT | Change password |

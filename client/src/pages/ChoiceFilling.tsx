@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { choiceAPI, instituteAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { choiceAPI, instituteAPI, seatMatrixAPI } from '../services/api';
+import { getCurrentUser, isAuthenticated, isStudent } from '../utils/auth';
 import './ChoiceFilling.css';
 
 interface Choice {
@@ -18,17 +20,48 @@ interface Institute {
   InstituteName: string;
 }
 
+interface Program {
+  ProgramCode: string;
+  ProgramName: string;
+  TotalSeats: number;
+}
+
 const ChoiceFilling = () => {
-  const [candidateId, setCandidateId] = useState('');
+  const navigate = useNavigate();
+  const [candidateId, setCandidateId] = useState<number | null>(null);
   const [choices, setChoices] = useState<Choice[]>([]);
   const [institutes, setInstitutes] = useState<Institute[]>([]);
+  const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingPrograms, setLoadingPrograms] = useState(false);
   const [selectedInstitute, setSelectedInstitute] = useState('');
   const [selectedProgram, setSelectedProgram] = useState('');
 
   useEffect(() => {
+    // Check authentication - only students can fill choices
+    if (!isAuthenticated() || !isStudent()) {
+      alert('Only students can access the choice filling page.');
+      navigate('/login');
+      return;
+    }
+
+    const user = getCurrentUser();
+    if (user?.candidateID) {
+      setCandidateId(user.candidateID);
+    } else {
+      alert('Unable to retrieve your candidate information.');
+      navigate('/');
+      return;
+    }
+
     fetchInstitutes();
-  }, []);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (candidateId) {
+      fetchChoices();
+    }
+  }, [candidateId]);
 
   const fetchInstitutes = async () => {
     try {
@@ -39,16 +72,54 @@ const ChoiceFilling = () => {
     }
   };
 
+  const fetchProgramsByInstitute = async (instituteCode: string) => {
+    if (!instituteCode) {
+      setPrograms([]);
+      return;
+    }
+
+    setLoadingPrograms(true);
+    try {
+      const response = await seatMatrixAPI.getByInstitute(instituteCode);
+      // Extract unique programs from seat matrix
+      const uniquePrograms = response.data.data.reduce((acc: Program[], curr: any) => {
+        const exists = acc.find(p => p.ProgramCode === curr.ProgramCode);
+        if (!exists) {
+          acc.push({
+            ProgramCode: curr.ProgramCode,
+            ProgramName: curr.ProgramName,
+            TotalSeats: curr.TotalSeats
+          });
+        }
+        return acc;
+      }, []);
+      setPrograms(uniquePrograms);
+    } catch (error) {
+      console.error('Error fetching programs:', error);
+      setPrograms([]);
+    } finally {
+      setLoadingPrograms(false);
+    }
+  };
+
+  const handleInstituteChange = (instituteCode: string) => {
+    setSelectedInstitute(instituteCode);
+    setSelectedProgram(''); // Reset program selection
+    fetchProgramsByInstitute(instituteCode);
+  };
+
   const fetchChoices = async () => {
     if (!candidateId) return;
     
     setLoading(true);
     try {
-      const response = await choiceAPI.getByCandidate(parseInt(candidateId));
+      const response = await choiceAPI.getByCandidate(candidateId);
       setChoices(response.data.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching choices:', error);
-      alert('Error fetching choices. Please check candidate ID.');
+      if (error.response?.status === 401) {
+        navigate('/login');
+      }
     } finally {
       setLoading(false);
     }
@@ -62,7 +133,7 @@ const ChoiceFilling = () => {
 
     try {
       await choiceAPI.add({
-        CandidateID: parseInt(candidateId),
+        CandidateID: candidateId,
         ChoiceNumber: choices.length + 1,
         InstituteCode: selectedInstitute,
         ProgramCode: selectedProgram,
@@ -73,9 +144,14 @@ const ChoiceFilling = () => {
       fetchChoices();
       setSelectedInstitute('');
       setSelectedProgram('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding choice:', error);
-      alert('Error adding choice. Please try again.');
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        alert(error.response?.data?.message || 'Unauthorized access');
+        navigate('/login');
+      } else {
+        alert('Error adding choice. Please try again.');
+      }
     }
   };
 
@@ -86,9 +162,14 @@ const ChoiceFilling = () => {
       await choiceAPI.delete(choiceId);
       alert('Choice deleted successfully!');
       fetchChoices();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting choice:', error);
-      alert('Error deleting choice.');
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        alert(error.response?.data?.message || 'Unauthorized access');
+        navigate('/login');
+      } else {
+        alert('Error deleting choice.');
+      }
     }
   };
 
@@ -97,7 +178,7 @@ const ChoiceFilling = () => {
     if (!confirm('Are you sure you want to lock your choices? You cannot modify them after locking.')) return;
 
     try {
-      await choiceAPI.lock(parseInt(candidateId), true);
+      await choiceAPI.lock(candidateId, true);
       alert('Choices locked successfully!');
       fetchChoices();
     } catch (error) {
@@ -109,28 +190,20 @@ const ChoiceFilling = () => {
   return (
     <div className="choice-filling-page">
       <h1>Choice Filling</h1>
+      <p className="page-description">Manage your college and program choices for counselling</p>
       
-      <div className="candidate-section">
-        <input
-          type="number"
-          placeholder="Enter Candidate ID"
-          value={candidateId}
-          onChange={(e) => setCandidateId(e.target.value)}
-          className="input-field"
-        />
-        <button onClick={fetchChoices} className="btn btn-primary">
-          Load Choices
-        </button>
-      </div>
-
       {candidateId && (
         <>
+          <div className="candidate-info">
+            <p><strong>Candidate ID:</strong> {candidateId}</p>
+          </div>
+
           <div className="add-choice-section">
             <h2>Add New Choice</h2>
             <div className="choice-form">
               <select
                 value={selectedInstitute}
-                onChange={(e) => setSelectedInstitute(e.target.value)}
+                onChange={(e) => handleInstituteChange(e.target.value)}
                 className="input-field"
               >
                 <option value="">Select Institute</option>
@@ -141,13 +214,21 @@ const ChoiceFilling = () => {
                 ))}
               </select>
 
-              <input
-                type="text"
-                placeholder="Enter Program Code (e.g., CSE, ECE, ME)"
+              <select
                 value={selectedProgram}
                 onChange={(e) => setSelectedProgram(e.target.value)}
                 className="input-field"
-              />
+                disabled={!selectedInstitute || loadingPrograms}
+              >
+                <option value="">
+                  {loadingPrograms ? 'Loading programs...' : 'Select Program'}
+                </option>
+                {programs.map(prog => (
+                  <option key={prog.ProgramCode} value={prog.ProgramCode}>
+                    {prog.ProgramName} ({prog.ProgramCode})
+                  </option>
+                ))}
+              </select>
 
               <button onClick={addChoice} className="btn btn-success">
                 Add Choice

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { candidateAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { candidateAPI, instituteAPI } from '../services/api';
+import { getCurrentUser, isAuthenticated, isStudent, isAdmin, isInstitute } from '../utils/auth';
 import './Candidates.css';
 
 interface Candidate {
@@ -15,6 +17,7 @@ interface Candidate {
 }
 
 const Candidates = () => {
+  const navigate = useNavigate();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -22,19 +25,80 @@ const Candidates = () => {
   const [filterCategory, setFilterCategory] = useState('All');
 
   useEffect(() => {
-    fetchCandidates();
-  }, []);
+    // Check authentication
+    if (!isAuthenticated()) {
+      navigate('/login');
+      return;
+    }
+
+    const user = getCurrentUser();
+    
+    // If student, show only their own data
+    if (isStudent() && user?.candidateID) {
+      fetchStudentData(user.candidateID);
+    } else if (isInstitute() && user?.instituteCode) {
+      // Institute sees only candidates who applied to them
+      fetchInstituteApplicants(user.instituteCode);
+    } else if (isAdmin()) {
+      // Admin can see all candidates
+      fetchCandidates();
+    } else {
+      // Institutes need to use specific endpoints
+      setError('Please use the appropriate dashboard to view relevant candidate information.');
+      setLoading(false);
+    }
+  }, [navigate]);
 
   const fetchCandidates = async () => {
     try {
       setLoading(true);
       const response = await candidateAPI.getAll();
-      // API returns { success: true, data: [...] }
       setCandidates(response.data.data || []);
       setError('');
-    } catch (err) {
-      setError('Failed to fetch candidates. Please try again later.');
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        navigate('/login');
+      } else {
+        setError(err.response?.data?.message || 'Failed to fetch candidates. Please try again later.');
+      }
       console.error('Error fetching candidates:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchInstituteApplicants = async (instituteCode: string) => {
+    try {
+      setLoading(true);
+      const response = await instituteAPI.getApplicants(instituteCode);
+      setCandidates(response.data.data || []);
+      setError('');
+    } catch (err: any) {
+      if (err.response?.status === 401 || err.response?.status === 403) {
+        navigate('/login');
+      } else {
+        setError(err.response?.data?.message || 'Failed to fetch applicants. Please try again later.');
+      }
+      console.error('Error fetching institute applicants:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchStudentData = async (candidateId: number) => {
+    try {
+      setLoading(true);
+      const response = await candidateAPI.getById(candidateId);
+      // For students, show only their own data
+      setCandidates([response.data.data]);
+      setError('');
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        navigate('/login');
+      } else {
+        setError(err.response?.data?.message || 'Failed to fetch your information. Please try again later.');
+      }
+      console.error('Error fetching student data:', err);
     } finally {
       setLoading(false);
     }
@@ -54,46 +118,59 @@ const Candidates = () => {
   const categories = ['All', ...Array.from(new Set(candidates.map(c => c.Category)))];
 
   if (loading) {
-    return <div className="loading">Loading candidates...</div>;
+    return <div className="loading">Loading...</div>;
   }
+
+  const isStudentView = isStudent();
 
   return (
     <div className="candidates-page">
       <div className="page-header">
-        <h1>Registered Candidates</h1>
+        <h1>{isStudentView ? 'My Profile' : 'Registered Candidates'}</h1>
         <p className="page-description">
-          View all registered candidates for JoSAA 2025 counselling
+          {isStudentView 
+            ? 'View your candidate information' 
+            : 'View all registered candidates for JoSAA 2025 counselling'}
         </p>
       </div>
 
       {error && <div className="error">{error}</div>}
 
-      <div className="filters">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search by name, email, or candidate ID..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-        <select
-          className="filter-select"
-          value={filterCategory}
-          onChange={(e) => setFilterCategory(e.target.value)}
-        >
-          {categories.map(cat => (
-            <option key={cat} value={cat}>{cat} Category</option>
-          ))}
-        </select>
-      </div>
+      {!isStudentView && (
+        <>
+          <div className="filters">
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search by name, email, or candidate ID..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <select
+              className="filter-select"
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat} Category</option>
+              ))}
+            </select>
+          </div>
 
-      <div className="candidates-count">
-        Showing {filteredCandidates.length} of {candidates.length} candidates
-      </div>
+          <div className="candidates-count">
+            Showing {filteredCandidates.length} of {candidates.length} candidates
+          </div>
+        </>
+      )}
 
       {filteredCandidates.length === 0 ? (
         <div className="no-results">
-          <div className="empty-state-icon">👤</div>
+          <div className="empty-state-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
           <p className="empty-state-text">No candidates found</p>
           <p className="empty-state-subtext">Try adjusting your search or filters</p>
         </div>

@@ -14,13 +14,38 @@ api.interceptors.request.use(
   (config) => {
     const user = localStorage.getItem('user');
     if (user) {
-      // If you implement JWT tokens, add them here
-      // const userData = JSON.parse(user);
-      // config.headers.Authorization = `Bearer ${token}`;
+      try {
+        const userData = JSON.parse(user);
+        // Add user information to headers for authentication
+        config.headers['x-user-id'] = userData.userID;
+        config.headers['x-user-role'] = userData.role;
+        if (userData.candidateID) {
+          config.headers['x-candidate-id'] = userData.candidateID;
+        }
+        if (userData.instituteCode) {
+          config.headers['x-institute-code'] = userData.instituteCode;
+        }
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
     }
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle authentication errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Unauthorized - clear local storage and redirect to login
+      localStorage.removeItem('user');
+      localStorage.removeItem('isAuthenticated');
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );
@@ -39,6 +64,8 @@ export const authAPI = {
     api.put(`/auth/password/${userID}`, { currentPassword, newPassword }),
   checkIdentifier: (type: string, value: string) => 
     api.get(`/auth/check?type=${type}&value=${value}`),
+  getAllUsers: () => api.get('/auth/users'),
+  deleteUser: (userId: number) => api.delete(`/auth/users/${userId}`),
 };
 
 // Helper functions for authentication
@@ -81,8 +108,10 @@ export const candidateAPI = {
 export const instituteAPI = {
   getAll: () => api.get('/institutes'),
   getByCode: (code: string) => api.get(`/institutes/${code}`),
-  getWithPrograms: () => api.get('/institutes/with-programs'),
+  getWithPrograms: () => api.get('/institutes/with-programs/all'),
   getProgramsByInstitute: (code: string) => api.get(`/institutes/${code}/programs`),
+  getAllocatedStudents: (code: string) => api.get(`/institutes/${code}/allocated-students`),
+  getApplicants: (code: string) => api.get(`/institutes/${code}/applicants`),
   create: (data: any) => api.post('/institutes', data),
   update: (code: string, data: any) => api.put(`/institutes/${code}`, data),
   delete: (code: string) => api.delete(`/institutes/${code}`),
@@ -110,6 +139,7 @@ export const allocationAPI = {
   create: (data: any) => api.post('/allocations', data),
   updateFeeStatus: (allocationId: number, status: string) => 
     api.put(`/allocations/${allocationId}/fee-status`, { status }),
+  delete: (allocationId: number) => api.delete(`/allocations/${allocationId}`),
 };
 
 // Program APIs
@@ -117,6 +147,7 @@ export const programAPI = {
   getAll: () => api.get('/programs'),
   getByCode: (code: string) => api.get(`/programs/${code}`),
   create: (data: any) => api.post('/programs', data),
+  delete: (code: string) => api.delete(`/programs/${code}`),
 };
 
 // Seat Matrix APIs
@@ -124,6 +155,10 @@ export const seatMatrixAPI = {
   getAll: () => api.get('/seat-matrix'),
   getByInstitute: (instituteCode: string) => api.get(`/seat-matrix/institute/${instituteCode}`),
   create: (data: any) => api.post('/seat-matrix', data),
+  update: (instituteCode: string, programCode: string, data: any) => 
+    api.put(`/seat-matrix/${instituteCode}/${programCode}`, data),
+  delete: (instituteCode: string, programCode: string, data: any) => 
+    api.delete(`/seat-matrix/${instituteCode}/${programCode}`, { data }),
 };
 
 // Opening Closing Ranks APIs
@@ -133,6 +168,7 @@ export const ranksAPI = {
   searchByRank: (rank: number, category: string) => 
     api.get(`/opening-closing-ranks/search?rank=${rank}&category=${category}`),
   create: (data: any) => api.post('/opening-closing-ranks', data),
+  delete: (ocrId: number) => api.delete(`/opening-closing-ranks/${ocrId}`),
 };
 
 // Counselling Round APIs

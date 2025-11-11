@@ -218,9 +218,21 @@
 }
 
 .empty-state-icon {
-  font-size: 4rem;
-  margin-bottom: var(--space-4);
-  opacity: 0.5;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(0, 82, 255, 0.1) 0%, rgba(51, 116, 255, 0.1) 100%);
+  border-radius: 50%;
+  opacity: 0.8;
+}
+
+.empty-state-icon svg {
+  width: 40px;
+  height: 40px;
+  color: var(--primary-blue);
 }
 
 .empty-state-text {

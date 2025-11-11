@@ -74,6 +74,61 @@ class Institute {
     );
     return result;
   }
+
+  // Get allocated students for an institute
+  static async getAllocatedStudents(instituteCode) {
+    const [rows] = await pool.execute(
+      `SELECT 
+        a.AllocationID,
+        a.CandidateID,
+        c.Name AS StudentName,
+        c.EmailAddress,
+        c.MobileNumber,
+        c.Category,
+        c.JEE_Mains_AIR,
+        a.RoundID,
+        a.AllocatedInstituteCode AS InstituteCode,
+        i.InstituteName,
+        a.AllocatedProgramCode AS ProgramCode,
+        p.ProgramName,
+        a.Action AS AllocatedCategory,
+        a.Allocation_Timestamp AS AllocationDate,
+        a.Fee_Payment_Status AS FeePayment_status,
+        c.Document_Upload_Status AS Document_Verification_Status
+      FROM Allocation a
+      JOIN Candidate c ON a.CandidateID = c.CandidateID
+      JOIN Institute i ON a.AllocatedInstituteCode = i.InstituteCode
+      JOIN Program p ON a.AllocatedProgramCode = p.ProgramCode
+      WHERE a.AllocatedInstituteCode = ?
+      ORDER BY a.RoundID DESC, p.ProgramName, c.JEE_Mains_AIR`,
+      [instituteCode]
+    );
+    return rows;
+  }
+
+  // Get candidates who applied to an institute
+  static async getApplicants(instituteCode) {
+    const [rows] = await pool.execute(
+      `SELECT DISTINCT
+        c.CandidateID,
+        c.Name AS StudentName,
+        c.EmailAddress,
+        c.MobileNumber,
+        c.Category,
+        c.JEE_Mains_AIR,
+        cl.ChoiceNumber,
+        cl.ProgramCode,
+        p.ProgramName,
+        cl.Lock_Status
+      FROM Choice_List cl
+      JOIN Candidate c ON cl.CandidateID = c.CandidateID
+      JOIN Program p ON cl.ProgramCode = p.ProgramCode
+      WHERE cl.InstituteCode = ?
+      ORDER BY cl.ChoiceNumber, c.JEE_Mains_AIR`,
+      [instituteCode]
+    );
+    return rows;
+  }
 }
 
 module.exports = Institute;

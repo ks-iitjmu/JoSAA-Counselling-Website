@@ -220,6 +220,15 @@ exports.changePassword = async (req, res) => {
     const { userID } = req.params;
     const { currentPassword, newPassword } = req.body;
     
+    // Security check: Users can only change their own password
+    // Admins can change any password (optional - you can remove this if needed)
+    if (req.user.userID !== parseInt(userID) && req.user.role !== 'Administrator') {
+      return res.status(403).json({
+        success: false,
+        message: 'You can only change your own password'
+      });
+    }
+    
     if (!newPassword || newPassword.length < 6) {
       return res.status(400).json({
         success: false,
@@ -328,6 +337,71 @@ exports.logout = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Logout failed',
+      error: error.message
+    });
+  }
+};
+
+// Get all users (Admin only)
+exports.getAllUsers = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'Administrator') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only administrators can view all users'
+      });
+    }
+    
+    const users = await User.getAll();
+    res.json({ success: true, data: users });
+  } catch (error) {
+    console.error('Get all users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve users',
+      error: error.message
+    });
+  }
+};
+
+// Delete user (Admin only)
+exports.deleteUser = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'Administrator') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only administrators can delete users'
+      });
+    }
+    
+    const userId = req.params.userId;
+    
+    // Prevent admin from deleting themselves
+    if (req.user.userID === parseInt(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'You cannot delete your own account'
+      });
+    }
+    
+    const result = await User.delete(userId);
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'User deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete user',
       error: error.message
     });
   }
