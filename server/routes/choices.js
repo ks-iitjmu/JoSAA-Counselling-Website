@@ -6,6 +6,10 @@ const { isAuthenticated } = require('../middleware/auth');
 // All choice routes require authentication
 router.use(isAuthenticated);
 
+// Admin routes
+router.get('/admin/all-candidates', choiceController.getAllCandidatesWithChoices);
+router.get('/admin/candidate/:candidateId', choiceController.getCandidateChoicesForAdmin);
+
 // Choice List routes
 router.get('/candidate/:candidateId', choiceController.getChoicesByCandidate);
 router.post('/', choiceController.addChoice);

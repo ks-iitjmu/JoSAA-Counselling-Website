@@ -129,6 +129,9 @@ export const choiceAPI = {
     api.post('/choices/lock', { candidateId, lockStatus }),
   delete: (choiceId: number) => api.delete(`/choices/${choiceId}`),
   deleteAll: (candidateId: number) => api.delete(`/choices/candidate/${candidateId}/all`),
+  // Admin-only endpoints
+  getAllCandidatesWithChoices: () => api.get('/choices/admin/all-candidates'),
+  getCandidateChoicesForAdmin: (candidateId: number) => api.get(`/choices/admin/candidate/${candidateId}`),
 };
 
 // Allocation APIs
@@ -137,6 +140,7 @@ export const allocationAPI = {
   getByCandidate: (candidateId: number) => api.get(`/allocations/candidate/${candidateId}`),
   getByRound: (roundId: number) => api.get(`/allocations/round/${roundId}`),
   create: (data: any) => api.post('/allocations', data),
+  update: (allocationId: number, data: any) => api.put(`/allocations/${allocationId}`, data),
   updateFeeStatus: (allocationId: number, status: string) => 
     api.put(`/allocations/${allocationId}/fee-status`, { status }),
   delete: (allocationId: number) => api.delete(`/allocations/${allocationId}`),

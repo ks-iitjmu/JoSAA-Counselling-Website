@@ -14,6 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 const candidateRoutes = require('./routes/candidates');
 const instituteRoutes = require('./routes/institutes');
 const choiceRoutes = require('./routes/choices');
+const allocationRoutes = require('./routes/allocations');
 const commonRoutes = require('./routes/common');
 const authRoutes = require('./routes/auth');
 
@@ -22,6 +23,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/candidates', candidateRoutes);
 app.use('/api/institutes', instituteRoutes);
 app.use('/api/choices', choiceRoutes);
+app.use('/api/allocations', allocationRoutes);
 app.use('/api', commonRoutes);
 
 // Health check route

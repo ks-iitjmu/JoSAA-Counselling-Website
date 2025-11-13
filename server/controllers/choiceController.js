@@ -195,3 +195,38 @@ exports.deleteAllChoices = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Admin: Get all candidates with their choices
+exports.getAllCandidatesWithChoices = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'Administrator') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only administrators can view all candidate choices'
+      });
+    }
+    
+    const candidatesWithChoices = await ChoiceList.getAllCandidatesWithChoices();
+    res.json({ success: true, data: candidatesWithChoices });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Admin: Get detailed choices for a specific candidate
+exports.getCandidateChoicesForAdmin = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'Administrator') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only administrators can access this information'
+      });
+    }
+    
+    const candidateId = parseInt(req.params.candidateId);
+    const choices = await ChoiceList.getByCandidateId(candidateId);
+    res.json({ success: true, data: choices });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};

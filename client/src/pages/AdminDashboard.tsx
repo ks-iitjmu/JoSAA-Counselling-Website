@@ -169,6 +169,26 @@ const AdminDashboard = () => {
               </div>
             </Link>
 
+            {/* Choice Allocation Management */}
+            <Link to="/choice-filling" className="management-card">
+              <div className="card-icon-wrapper">
+                <div className="card-icon">
+                  <svg viewBox="0 0 24 24" width="32" height="32">
+                    <path d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2ZM18 20H6V4H13V9H18V20Z"/>
+                    <path d="M8 15.5L9.5 17L13 13.5"/>
+                  </svg>
+                </div>
+              </div>
+              <h3>Choice Allocation Management</h3>
+              <p>View candidate choices and allocate seats with full CRUD operations</p>
+              <div className="card-actions">
+                <span className="action-badge">View</span>
+                <span className="action-badge">Create</span>
+                <span className="action-badge">Update</span>
+                <span className="action-badge">Delete</span>
+              </div>
+            </Link>
+
             {/* Institute Management */}
             <Link to="/institutes" className="management-card">
               <div className="card-icon-wrapper">

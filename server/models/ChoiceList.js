@@ -84,6 +84,43 @@ class ChoiceList {
       connection.release();
     }
   }
+
+  // Get all candidates with their choices (Admin only)
+  static async getAllCandidatesWithChoices() {
+    const [rows] = await pool.execute(
+      `SELECT 
+        c.CandidateID,
+        c.Name as CandidateName,
+        c.JEE_Mains_AIR,
+        c.Category,
+        c.Email,
+        c.Phone,
+        COUNT(cl.ChoiceID) as TotalChoices,
+        MAX(cl.Lock_Status) as ChoicesLocked,
+        (SELECT JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'ChoiceID', cl2.ChoiceID,
+            'ChoiceNumber', cl2.ChoiceNumber,
+            'InstituteCode', cl2.InstituteCode,
+            'InstituteName', i2.InstituteName,
+            'ProgramCode', cl2.ProgramCode,
+            'ProgramName', p2.ProgramName,
+            'Degree_Type', p2.Degree_Type,
+            'Lock_Status', cl2.Lock_Status
+          )
+        )
+        FROM Choice_List cl2
+        JOIN Institute i2 ON cl2.InstituteCode = i2.InstituteCode
+        JOIN Program p2 ON cl2.ProgramCode = p2.ProgramCode
+        WHERE cl2.CandidateID = c.CandidateID
+        ORDER BY cl2.ChoiceNumber) as Choices
+      FROM Candidate c
+      LEFT JOIN Choice_List cl ON c.CandidateID = cl.CandidateID
+      GROUP BY c.CandidateID
+      ORDER BY c.JEE_Mains_AIR`
+    );
+    return rows;
+  }
 }
 
 module.exports = ChoiceList;
