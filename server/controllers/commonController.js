@@ -386,6 +386,26 @@ exports.createOpeningClosingRank = async (req, res) => {
   }
 };
 
+// Update opening-closing rank (Admin only)
+exports.updateOpeningClosingRank = async (req, res) => {
+  try {
+    if (!req.user || req.user.role !== 'Administrator') {
+      return res.status(403).json({
+        success: false,
+        message: 'Only administrators can update opening-closing rank entries'
+      });
+    }
+    
+    const result = await OpeningClosingRanks.update(req.params.ocrId, req.body);
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ success: false, message: 'Opening-Closing rank entry not found' });
+    }
+    res.json({ success: true, message: 'Opening-Closing rank updated successfully' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 // Delete opening-closing rank (Admin only)
 exports.deleteOpeningClosingRank = async (req, res) => {
   try {

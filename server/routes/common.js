@@ -29,6 +29,7 @@ router.get('/opening-closing-ranks', commonController.getOpeningClosingRanks);
 router.get('/opening-closing-ranks/round/:roundId', commonController.getRanksByRound);
 router.get('/opening-closing-ranks/search', commonController.searchByRank);
 router.post('/opening-closing-ranks', isAuthenticated, commonController.createOpeningClosingRank);
+router.put('/opening-closing-ranks/:ocrId', isAuthenticated, commonController.updateOpeningClosingRank);
 router.delete('/opening-closing-ranks/:ocrId', isAuthenticated, commonController.deleteOpeningClosingRank);
 
 // Counselling Round routes - PUBLIC viewing, authenticated creation

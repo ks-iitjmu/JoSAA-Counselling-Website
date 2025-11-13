@@ -172,6 +172,7 @@ export const ranksAPI = {
   searchByRank: (rank: number, category: string) => 
     api.get(`/opening-closing-ranks/search?rank=${rank}&category=${category}`),
   create: (data: any) => api.post('/opening-closing-ranks', data),
+  update: (ocrId: number, data: any) => api.put(`/opening-closing-ranks/${ocrId}`, data),
   delete: (ocrId: number) => api.delete(`/opening-closing-ranks/${ocrId}`),
 };
 
